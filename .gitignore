@@ -2,3 +2,5 @@ venv/
 *venv/
 data/raw/*.csv
 __pycache__/
+data/stream_batches/*.ndjson
+*.pyc
