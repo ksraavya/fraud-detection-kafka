@@ -112,7 +112,8 @@ def load_transactions(
             sample_size = len(df)
 
         # Random sample so we don't always bias toward the start of the file
-        df = df.sample(n=sample_size, random_state=None).reset_index(drop=True)
+        start_idx = random.randint(0, len(df) - sample_size)
+        df = df.iloc[start_idx:start_idx + sample_size]
 
     skipped = 0
 
