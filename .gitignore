@@ -5,3 +5,4 @@ __pycache__/
 data/stream_batches/*.ndjson
 *.pyc
 .env
+data/stream_batches/_uploaded/
