@@ -1,0 +1,6 @@
+CREATE OR REPLACE STAGE FRAUD_DETECTION.RAW.TRANSACTION_STAGE
+FILE_FORMAT = (
+    TYPE = JSON
+    STRIP_OUTER_ARRAY = FALSE
+)
+COMMENT = 'Landing stage for NDJSON batch files produced by the Kafka consumer';
