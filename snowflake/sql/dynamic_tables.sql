@@ -41,7 +41,7 @@ SELECT
     statistical_amount_spike_flag
 
 -- Schema-qualify the source so this works regardless of the session's current schema 
-FROM FRAUD_DETECTION.RAW.MART_ANOMALY_FEATURES;
+FROM FRAUD_DETECTION.ANALYTICS.MART_ANOMALY_FEATURES;
 
 
 COMMENT ON DYNAMIC TABLE DYNAMIC_ANOMALY_FEATURES IS
