@@ -7,3 +7,6 @@ data/stream_batches/*.ndjson
 .env
 data/stream_batches/_uploaded/
 dbt/profiles.yml
+dbt/.user.yml
+dbt/logs/
+dbt/target/
