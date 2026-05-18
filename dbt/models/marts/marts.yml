@@ -1,0 +1,110 @@
+version: 2
+
+models:
+
+  - name: mart_anomaly_features
+    description: >
+      Final ML-ready feature mart for fraud and anomaly detection. Joins
+      stg_transactions with int_user_aggregates to produce one wide row per
+      transaction containing raw features, balance snapshots, rolling user
+      behaviour features, and engineered spike flags.
+      Consumers: ML training pipelines, BI dashboards, alerting rules.
+
+    columns:
+
+      - name: event_id
+        description: UUID for the event envelope. Primary key of this model.
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_id
+        description: UUID that uniquely identifies the transaction.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Originating account identifier.
+        tests:
+          - not_null
+
+      - name: merchant_id
+        description: Destination account or merchant identifier.
+        tests:
+          - not_null
+
+      - name: event_timestamp
+        description: Logical event time derived from the PaySim simulation step.
+        tests:
+          - not_null
+
+      - name: transaction_date
+        description: Calendar date derived from event_timestamp.
+        tests:
+          - not_null
+
+      - name: transaction_hour
+        description: Hour of day (0-23) derived from event_timestamp.
+        tests:
+          - not_null
+
+      - name: transaction_type
+        description: PaySim transaction category.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [CASH_IN, CASH_OUT, DEBIT, PAYMENT, TRANSFER]
+
+      - name: amount
+        description: Transaction value in simulation currency units.
+        tests:
+          - not_null
+
+      - name: is_fraud
+        description: PaySim ground-truth fraud label (0 = legitimate, 1 = fraud).
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: is_synthetic_anomaly
+        description: >
+          1 if a synthetic anomaly was injected by the producer, 0 otherwise.
+          Filter on this column to isolate real fraud signal from test data.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: synthetic_anomaly
+        description: >
+          The anomaly type injected (high_amount, rapid_repeat, merchant_spike),
+          or NULL if no anomaly was injected.
+
+      - name: rolling_avg_amount
+        description: >
+          Average amount over the customer's 10 preceding transactions.
+          NULL for the customer's very first transaction.
+
+      - name: rolling_transaction_count
+        description: >
+          Number of transactions in the customer's 10-transaction sliding window.
+        tests:
+          - not_null
+
+      - name: merchant_diversity_score
+        description: >
+          Distinct merchant count across the customer's 20-transaction window.
+        tests:
+          - not_null
+
+      - name: statistical_amount_spike_flag
+        description: >
+          1 if this transaction's amount is more than 3x the customer's
+          rolling_avg_amount baseline, 0 otherwise.
+          0 when rolling_avg_amount is NULL (first transaction, no baseline).
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]

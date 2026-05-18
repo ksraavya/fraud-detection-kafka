@@ -1,0 +1,145 @@
+version: 2
+
+# ── Sources ────────────────────────────────────────────────────────────────────
+# Declares the raw Snowflake table as a dbt source so the lineage graph is
+# complete and dbt source freshness checks can run against it.
+
+sources:
+
+  - name: raw
+    database: FRAUD_DETECTION
+    schema: RAW
+
+    tables:
+
+      - name: raw_transactions
+        description: >
+          Raw transaction events landed from the Kafka consumer via Snowflake
+          COPY INTO. One row per transaction event. Contains both real PaySim
+          transactions and synthetically injected anomalies.
+
+        columns:
+
+          - name: event_id
+            description: UUID for the event envelope.
+            tests:
+              - not_null
+              - unique
+
+          - name: transaction_id
+            description: UUID that uniquely identifies the transaction.
+            tests:
+              - not_null
+              - unique
+
+          - name: customer_id
+            tests:
+              - not_null
+
+          - name: amount
+            tests:
+              - not_null
+
+          - name: is_fraud
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: is_synthetic_anomaly
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: transaction_type
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [CASH_IN, CASH_OUT, DEBIT, PAYMENT, TRANSFER]
+
+          - name: ingestion_mode
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [streaming, batch]
+
+
+# ── Models ─────────────────────────────────────────────────────────────────────
+
+models:
+
+  - name: stg_transactions
+    description: >
+      Cleaned staging model for raw streamed transaction events. Selects and
+      renames columns from the raw source, adds derived time fields
+      (transaction_date, transaction_hour), and surfaces all label columns
+      including is_synthetic_anomaly for downstream filtering.
+
+    columns:
+
+      - name: event_id
+        description: UUID for the event envelope. Primary key of this model.
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_id
+        description: UUID that uniquely identifies the transaction.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Originating account identifier.
+        tests:
+          - not_null
+
+      - name: merchant_id
+        description: Destination account or merchant identifier.
+        tests:
+          - not_null
+
+      - name: amount
+        description: Transaction value in simulation currency units.
+        tests:
+          - not_null
+
+      - name: event_timestamp
+        description: Logical event time derived from the PaySim simulation step.
+        tests:
+          - not_null
+
+      - name: transaction_type
+        description: PaySim transaction category.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [CASH_IN, CASH_OUT, DEBIT, PAYMENT, TRANSFER]
+
+      - name: is_fraud
+        description: PaySim ground-truth fraud label (0 = legitimate, 1 = fraud).
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: is_synthetic_anomaly
+        description: >
+          Flag indicating a synthetic anomaly was injected by the producer
+          (0 = real PaySim row, 1 = synthetic). Use this to separate
+          ground-truth fraud labels from injected test anomalies.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: transaction_date
+        description: Calendar date derived from event_timestamp.
+        tests:
+          - not_null
+
+      - name: transaction_hour
+        description: Hour of day (0-23) derived from event_timestamp.
+        tests:
+          - not_null

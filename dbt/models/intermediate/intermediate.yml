@@ -1,0 +1,54 @@
+version: 2
+
+models:
+
+  - name: int_user_aggregates
+    description: >
+      Rolling user-level transaction features computed via window functions
+      over stg_transactions. Each row represents one transaction enriched with
+      aggregates calculated from that customer's prior transaction history.
+      The rolling window intentionally excludes the current row so that
+      downstream spike flags compare a transaction against an unbiased baseline.
+
+    columns:
+
+      - name: transaction_id
+        description: >
+          Join key back to stg_transactions and forward to mart_anomaly_features.
+          Unique per row because the window functions are computed per transaction.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Originating account identifier. Partition key for all windows.
+        tests:
+          - not_null
+
+      - name: event_timestamp
+        description: Logical event time. Used as the ORDER BY key in window frames.
+        tests:
+          - not_null
+
+      - name: rolling_avg_amount
+        description: >
+          Average transaction amount over the 10 transactions immediately
+          preceding the current one (ROWS BETWEEN 10 PRECEDING AND 1 PRECEDING).
+          NULL for a customer's first transaction (no prior history).
+          Used in the mart to compute statistical_amount_spike_flag.
+
+      - name: rolling_transaction_count
+        description: >
+          Count of transactions in a 10-transaction sliding window including
+          the current row (ROWS BETWEEN 9 PRECEDING AND CURRENT ROW).
+          Indicates how active the customer has been recently.
+        tests:
+          - not_null
+
+      - name: merchant_diversity_score
+        description: >
+          Count of distinct merchants seen in the 20-transaction window
+          preceding and including the current row. A sudden spike in merchant
+          diversity can signal card testing or account takeover behaviour.
+        tests:
+          - not_null
