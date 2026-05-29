@@ -108,3 +108,10 @@ models:
           - not_null
           - accepted_values:
               values: [0, 1]
+      
+      - name: transaction_velocity
+        description: >
+          Producer-assigned transaction velocity. Elevated for rapid_repeat
+          synthetic anomalies. Complements rolling_transaction_count.
+        tests:
+          - not_null

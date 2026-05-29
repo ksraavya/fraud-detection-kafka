@@ -5,7 +5,8 @@ WITH base AS (
         event_timestamp,
         transaction_id,
         merchant_id,
-        amount
+        amount,
+        transaction_velocity
     FROM {{ ref('stg_transactions') }}
 
 ),
@@ -17,6 +18,7 @@ user_metrics AS (
         customer_id,
         event_timestamp,
         transaction_id,
+        transaction_velocity,
 
         -- Rolling average over the 10 preceding transactions, deliberately
         -- excluding the current row so the flag in the mart compares this
@@ -55,5 +57,6 @@ SELECT
     transaction_id,
     rolling_avg_amount,
     rolling_transaction_count,
-    merchant_diversity_score
+    merchant_diversity_score,
+    transaction_velocity
 FROM user_metrics

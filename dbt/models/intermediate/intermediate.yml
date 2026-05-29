@@ -52,3 +52,11 @@ models:
           diversity can signal card testing or account takeover behaviour.
         tests:
           - not_null
+
+      - name: transaction_velocity
+        description: >
+          Raw transaction velocity from the producer enrichment layer.
+          Distinct from rolling_transaction_count — this is the producer-assigned
+          value, elevated for rapid_repeat synthetic anomalies.
+        tests:
+          - not_null

@@ -26,6 +26,7 @@ SELECT
     -- Transaction Detail
     amount,
     transaction_type,
+    transaction_velocity,
 
     -- Labels
     is_fraud,

@@ -46,6 +46,9 @@ SELECT
     aggregates.rolling_transaction_count,
     aggregates.merchant_diversity_score,
 
+    -- Enrichment from producer
+    base.transaction_velocity,
+
     -- Engineered Flags
     -- rolling_avg_amount excludes the current row (see int_user_aggregates),
     -- so this comparison is clean: current amount vs prior baseline.

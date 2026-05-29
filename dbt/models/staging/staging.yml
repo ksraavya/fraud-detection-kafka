@@ -143,3 +143,10 @@ models:
         description: Hour of day (0-23) derived from event_timestamp.
         tests:
           - not_null
+
+      - name: transaction_velocity
+        description: >
+          Number of transactions by this customer in the current window.
+          Elevated (15-40) for rapid_repeat synthetic anomalies.
+        tests:
+          - not_null
